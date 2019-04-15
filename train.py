@@ -113,8 +113,8 @@ def train(
     n_burnin = min(round(nB / 5 + 1), 1000)  # burn-in batches
     os.remove('train_batch0.jpg') if os.path.exists('train_batch0.jpg') else None
     os.remove('test_batch0.jpg') if os.path.exists('test_batch0.jpg') else None
-    model.train()
     for epoch in range(start_epoch, epochs):
+        model.train()
         print(('\n%8s%12s' + '%10s' * 7) % ('Epoch', 'Batch', 'xy', 'wh', 'conf', 'cls', 'total', 'nTargets', 'time'))
 
         # Update scheduler
