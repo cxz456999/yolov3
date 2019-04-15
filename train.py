@@ -247,7 +247,7 @@ if __name__ == '__main__':
     evolve0 = {'k': 74, 'xy': 8, 'wh': 1, 'conf': 64, 'cls': 1}
     evolve = evolve0.copy()
     best = 0.
-    for generation in range(100):
+    for generation in range(50):
         # normalize loss constants (sum to 1)
         s = evolve['xy'] + evolve['wh'] + evolve['conf'] + evolve['cls']
         evolve['xy'] /= s
