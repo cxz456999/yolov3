@@ -249,11 +249,11 @@ if __name__ == '__main__':
     best = 0.
     for generation in range(50):
         # normalize loss constants (sum to 1)
-        s = evolve['xy'] + evolve['wh'] + evolve['conf'] + evolve['cls']
-        evolve['xy'] /= s
-        evolve['wh'] /= s
-        evolve['conf'] /= s
-        evolve['cls'] /= s
+        sc = evolve['xy'] + evolve['wh'] + evolve['conf'] + evolve['cls']
+        evolve['xy'] /= sc
+        evolve['wh'] /= sc
+        evolve['conf'] /= sc
+        evolve['cls'] /= sc
 
         init_seeds()
         results = train(
@@ -274,8 +274,14 @@ if __name__ == '__main__':
         with open('evolution.txt', 'a') as file:
             s = '%11.4g' * 5 % (evolve['k'], evolve['xy'], evolve['wh'], evolve['cls'], evolve['conf'])
             file.write(s + '%11.3g' * 5 % results + '\n')  # P, R, mAP, F1, test_loss
+        print(evolve)
+        print(evolve0)
+        print(s)
 
+        # Update
+        print('old comparison:', results[2], best, results)
         if results[2] > best:
+            print('Mutation resulted in better result!', results[2], best)
             best = results[2]
             evolve0 = evolve.copy()  # new starting point for mutations!!
 
