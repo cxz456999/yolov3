@@ -45,12 +45,12 @@ wget https://storage.googleapis.com/ultralytics/yolov3/best_v1_0.pt -O weights/b
 
 # Debug/Development
 sudo rm -rf yolov3
-git clone https://github.com/ultralytics/yolov3  # master
-# git clone -b test --depth 1 https://github.com/ultralytics/yolov3 yolov3_test  # branch
+# git clone https://github.com/ultralytics/yolov3  # master
+git clone -b test --depth 1 https://github.com/ultralytics/yolov3 yolov3  # branch
 cp -r weights yolov3
 cp -r cocoapi/PythonAPI/pycocotools yolov3
 cd yolov3
-python3 test.py --save-json
+python3 train.py --nosave --data data/coco_100img.data --img-size 320 --epochs 30
 
 git pull https://github.com/ultralytics/yolov3
 python3 train.py --data-cfg data/coco_1img.data
