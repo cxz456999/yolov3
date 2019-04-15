@@ -181,8 +181,12 @@ def train(
                 print('multi_scale img_size = %g' % dataset.img_size)
 
         # Calculate mAP
-        with torch.no_grad():
-            results = test.test(cfg, data_cfg, batch_size=batch_size, img_size=img_size, model=model, conf_thres=0.1)
+        if epoch + 1 == epochs:
+            with torch.no_grad():
+                results = test.test(cfg, data_cfg, batch_size=batch_size, img_size=img_size, model=model,
+                                    conf_thres=0.1)
+        else:
+            results = (0, 0, 0, 0, 0)
 
         # Write epoch results
         with open('results.txt', 'a') as file:
