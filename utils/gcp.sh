@@ -50,7 +50,8 @@ git clone -b test --depth 1 https://github.com/ultralytics/yolov3 yolov3  # bran
 cp -r weights yolov3
 cp -r cocoapi/PythonAPI/pycocotools yolov3
 cd yolov3
-python3 train.py --nosave --data data/coco_100img.data --img-size 320 --epochs 30
+python3 train.py --nosave --data data/coco_100img.data --img-size 320
+sudo shutdown
 
 git pull https://github.com/ultralytics/yolov3
 python3 train.py --data-cfg data/coco_1img.data
