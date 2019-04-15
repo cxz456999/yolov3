@@ -242,7 +242,7 @@ def wh_iou(box1, box2):
     return inter_area / union_area  # iou
 
 
-def compute_loss(p, targets):  # predictions, targets
+def compute_loss(p, targets, model):  # predictions, targets
     FT = torch.cuda.FloatTensor if p[0].is_cuda else torch.Tensor
     lxy, lwh, lcls, lconf = FT([0]), FT([0]), FT([0]), FT([0])
     txy, twh, tcls, indices = targets
@@ -252,25 +252,26 @@ def compute_loss(p, targets):  # predictions, targets
 
     # Compute losses
     # gp = [x.numel() for x in tconf]  # grid points
+    e = model.evolve
     for i, pi0 in enumerate(p):  # layer i predictions, i
         b, a, gj, gi = indices[i]  # image, anchor, gridx, gridy
         tconf = torch.zeros_like(pi0[..., 0])  # conf
         nt = len(b)  # number of targets
 
         # Compute losses
-        k = 1  # nt / bs
+        k = e['k']  # nt / bs
         if nt:
             pi = pi0[b, a, gj, gi]  # predictions closest to anchors
             tconf[b, a, gj, gi] = 1  # conf
 
-            lxy += (k * 8) * MSE(torch.sigmoid(pi[..., 0:2]), txy[i])  # xy loss
-            lwh += (k * 1) * MSE(pi[..., 2:4], twh[i])  # wh yolo loss
+            lxy += (k * e['xy']) * MSE(torch.sigmoid(pi[..., 0:2]), txy[i])  # xy loss
+            lwh += (k * e['wh']) * MSE(pi[..., 2:4], twh[i])  # wh yolo loss
             # lwh += (k * 1) * MSE(torch.sigmoid(pi[..., 2:4]), twh[i])  # wh power loss
-            lcls += (k * 1) * CE(pi[..., 5:], tcls[i])  # class_conf loss
+            lcls += (k * e['cls']) * CE(pi[..., 5:], tcls[i])  # cls loss
 
         # pos_weight = FT([gp[i] / min(gp) * 4.])
         # BCE = nn.BCEWithLogitsLoss(pos_weight=pos_weight)
-        lconf += (k * 64) * BCE(pi0[..., 4], tconf)  # obj_conf loss
+        lconf += (k * e['conf']) * BCE(pi0[..., 4], tconf)  # conf loss
     loss = lxy + lwh + lconf + lcls
 
     return loss, torch.cat((lxy, lwh, lconf, lcls, loss)).detach()

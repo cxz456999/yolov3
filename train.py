@@ -21,7 +21,8 @@ def train(
         multi_scale=False,
         freeze_backbone=False,
         num_workers=4,
-        transfer=False  # Transfer learning (train only YOLO layers)
+        transfer=False,  # Transfer learning (train only YOLO layers)
+        evolve=None
 
 ):
     weights = 'weights' + os.sep
@@ -103,6 +104,8 @@ def train(
         from apex import amp
         model, optimizer = amp.initialize(model, optimizer, opt_level='O1')
 
+    model.evolve = evolve
+
     # Start training
     t = time.time()
     model_info(model)
@@ -123,7 +126,7 @@ def train(
                 if int(name.split('.')[1]) < cutoff:  # if layer < 75
                     p.requires_grad = False if epoch == 0 else True
 
-        mloss = torch.zeros(5).to(device) # mean losses
+        mloss = torch.zeros(5).to(device)  # mean losses
         for i, (imgs, targets, _, _) in enumerate(dataloader):
             imgs = imgs.to(device)
             targets = targets.to(device)
@@ -148,7 +151,7 @@ def train(
             target_list = build_targets(model, targets)
 
             # Compute loss
-            loss, loss_items = compute_loss(pred, target_list)
+            loss, loss_items = compute_loss(pred, target_list, model)
 
             # Compute gradient
             if mixed_precision:
@@ -214,6 +217,8 @@ def train(
             # Delete checkpoint
             del chkpt
 
+    return results
+
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
@@ -235,17 +240,41 @@ if __name__ == '__main__':
     opt = parser.parse_args()
     print(opt, end='\n\n')
 
-    init_seeds()
+    evolve0 = {'k': 74, 'xy': 8, 'wh': 1, 'conf': 64, 'cls': 1}
+    evolve = evolve0.copy()
+    best = 0.
+    for generation in range(100):
+        # normalize loss constants (sum to 1)
+        s = evolve['xy'] + evolve['wh'] + evolve['conf'] + evolve['cls']
+        evolve['xy'] /= s
+        evolve['wh'] /= s
+        evolve['conf'] /= s
+        evolve['cls'] /= s
 
-    train(
-        opt.cfg,
-        opt.data_cfg,
-        img_size=opt.img_size,
-        resume=opt.resume or opt.transfer,
-        transfer=opt.transfer,
-        epochs=opt.epochs,
-        batch_size=opt.batch_size,
-        accumulate=opt.accumulate,
-        multi_scale=opt.multi_scale,
-        num_workers=opt.num_workers
-    )
+        init_seeds()
+        results = train(
+            opt.cfg,
+            opt.data_cfg,
+            img_size=opt.img_size,
+            resume=opt.resume or opt.transfer,
+            transfer=opt.transfer,
+            epochs=opt.epochs,
+            batch_size=opt.batch_size,
+            accumulate=opt.accumulate,
+            multi_scale=opt.multi_scale,
+            num_workers=opt.num_workers,
+            evolve=evolve
+        )
+
+        # Write mutation results
+        with open('evolution.txt', 'a') as file:
+            s = '%11.4g' * 5 % (evolve['k'], evolve['xy'], evolve['wh'], evolve['cls'], evolve['conf'])
+            file.write(s + '%11.3g' * 5 % results + '\n')  # P, R, mAP, F1, test_loss
+
+        if results[2] > best:
+            best = results[2]
+            evolve0 = evolve.copy()  # new starting point for mutations!!
+
+        # Mutate hyperparameters
+        for k in evolve.keys():
+            evolve[k] = evolve0[k] * (float(np.random.randn(1).clip(-3, 3)) / 10 + 1)

@@ -72,7 +72,7 @@ def test(
         target_list = build_targets(model, targets)
 
         # Compute loss
-        loss_i, _ = compute_loss(train_out, target_list)
+        loss_i, _ = compute_loss(train_out, target_list, model)
         loss += loss_i.item()
 
         # Run NMS
