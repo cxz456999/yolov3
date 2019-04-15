@@ -118,7 +118,7 @@ def train(
         print(('\n%8s%12s' + '%10s' * 7) % ('Epoch', 'Batch', 'xy', 'wh', 'conf', 'cls', 'total', 'nTargets', 'time'))
 
         # Update scheduler
-        scheduler.step()
+        # scheduler.step()
 
         # Freeze backbone at epoch 0, unfreeze at epoch 1
         if freeze_backbone and epoch < 2:
