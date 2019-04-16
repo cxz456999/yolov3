@@ -288,4 +288,4 @@ if __name__ == '__main__':
         # Mutate hyperparameters
         init_seeds(int(time.time()))
         for k in evolve.keys():
-            evolve[k] = evolve0[k] * (float(np.random.randn(1).clip(-3, 3)) / 10 + 1)
+            evolve[k] = evolve0[k] * (float(np.random.randn(1).clip(-3, 3)) * 0.3 + 1)
