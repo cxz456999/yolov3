@@ -244,7 +244,7 @@ if __name__ == '__main__':
     opt = parser.parse_args()
     print(opt, end='\n\n')
 
-    evolve0 = {'k': 74, 'xy': 8, 'wh': 1, 'conf': 64, 'cls': 1}
+    evolve0 = {'k': 140, 'xy': .06, 'wh': .0093, 'cls': .013, 'conf': 0.92}
     evolve = evolve0.copy()
     best = 0.
     for generation in range(50):
