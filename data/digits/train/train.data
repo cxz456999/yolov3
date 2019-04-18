@@ -1,0 +1,6 @@
+classes=10
+train=./data/digits/train/img.txt
+valid=./data/digits/test/img.txt
+names=./data/digits/train/train.names
+backup=backup/
+eval=coco
